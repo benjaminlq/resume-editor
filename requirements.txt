@@ -1,0 +1,20 @@
+# Secrets
+python-dotenv
+
+# Orchestration
+llama-index-llms-openai
+llama-index
+
+# FrontEnd
+chainlit
+gradio
+streamlit
+streamlit-chat
+
+# Misc
+matplotlib
+openai
+tiktoken
+
+# Document
+pdf2image
