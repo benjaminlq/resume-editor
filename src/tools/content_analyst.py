@@ -63,3 +63,20 @@ def critique_cv_content(
     response = llm.complete(query)
     
     return (query, response.text) if return_query else response.text
+
+async def acritique_cv_content(
+    resume: str,
+    job_description: Optional[str] = None,
+    llm: LLM = CONTENT_CRITIQUE_LLM,
+    return_query: bool = False
+) -> Union[Tuple[str, str], str]:
+    if job_description:
+        query = CV_CRITIQUE_PROMPT_TEMPLATE_WITH_JD.format(
+            resume=resume, job_description=job_description
+            )
+    else:
+        query = CV_CRITIQUE_PROMPT_TEMPLATE_NO_JD.format(resume=resume)
+        
+    response = await llm.acomplete(query)
+    
+    return (query, response.text) if return_query else response.text

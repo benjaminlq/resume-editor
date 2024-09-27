@@ -78,4 +78,36 @@ def critique_cv_layout(
     
     response = llm.chat(messages)
     return response.message.content
+
+async def acritique_cv_layout(
+    resume: str,
+    job_description: Optional[str] = None,
+    llm: LLM = LAYOUT_CRITIQUE_LLM
+):  
+    if not isinstance(resume, list):
+        resume = [resume]
     
+    image_documents = [
+        ImageDocument(image=convert_PIL_to_base64(cv_image)) for cv_image in resume
+    ]
+
+    messages = [
+        ChatMessage(content=CV_LAYOUT_CRITIQUE_SYSTEM_PROMPT, role=MessageRole.SYSTEM)
+    ]
+    
+    if job_description:
+        messages.append(
+            ChatMessage(content=f"# Job description:\n\n{job_description}", role=MessageRole.SYSTEM)
+        )
+    
+    messages.append(
+        generate_openai_multi_modal_chat_message(
+            prompt = "resume",
+            role = "user",
+            image_documents=image_documents,
+            image_detail="high"
+            )
+    )
+    
+    response = await llm.achat(messages)
+    return response.message.content

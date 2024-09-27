@@ -22,7 +22,7 @@ You will be given a job description in text, which may contain URL links to the 
 If there are URLs relevant to describing job description and requirements, use the extraction tool to extract the information.
 Append the relevant information collected from the URLs to the original job description only if the content extracted are relevant.
 
-If there is no relevant information, return 'Please provide a valid job description in as text or URL link'
+Your output only contains information about the job description and requirements, exclude any filler texts. If there is no relevant information, return 'Please provide a valid job description in as text or URL link'
 """
 
 @retry(tries=5)
@@ -73,7 +73,7 @@ def refine_job_description(
 
     jd_extraction_agent = OpenAIAgent.from_tools(
         [JD_EXTRACTION_TOOL],
-        llm=EXTRACTION_LLM,
+        llm=LLM,
         system_prompt=JD_AGENT_SYSTEM_PROMPT
     )
     
