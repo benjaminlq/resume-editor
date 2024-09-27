@@ -6,10 +6,7 @@ llama-index-llms-openai
 llama-index
 
 # FrontEnd
-chainlit
 gradio
-streamlit
-streamlit-chat
 
 # Misc
 matplotlib
@@ -18,3 +15,6 @@ tiktoken
 
 # Document
 pdf2image
+
+# Modules
+retry
