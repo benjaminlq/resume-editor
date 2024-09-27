@@ -1,10 +1,7 @@
 from llama_index.core.prompts import PromptTemplate
-from llama_index.llms.openai import OpenAI
 from llama_index.core.llms import LLM
 
 from typing import Tuple, Union, Optional
-
-CONTENT_CRITIQUE_LLM = OpenAI(model="o1-preview", temperature=0.2, max_completion_tokens=40000)
 
 CV_CONTENT_CRITIQUE_PROMPT_WITH_JD = """You are an HR specialist with expertise in building effective resumes.
 You are not afraid to constructively comment on the weak aspects of the resume. Be honest, do not make up information.
@@ -49,8 +46,8 @@ CV_CRITIQUE_PROMPT_TEMPLATE_NO_JD = PromptTemplate(CV_CONTENT_CRITIQUE_PROMPT_NO
 
 def critique_cv_content(
     resume: str,
+    llm: LLM,
     job_description: Optional[str] = None,
-    llm: LLM = CONTENT_CRITIQUE_LLM,
     return_query: bool = False
 ) -> Union[Tuple[str, str], str]:
     if job_description:
@@ -66,8 +63,8 @@ def critique_cv_content(
 
 async def acritique_cv_content(
     resume: str,
+    llm: LLM,
     job_description: Optional[str] = None,
-    llm: LLM = CONTENT_CRITIQUE_LLM,
     return_query: bool = False
 ) -> Union[Tuple[str, str], str]:
     if job_description:

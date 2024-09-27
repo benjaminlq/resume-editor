@@ -1,11 +1,6 @@
 from llama_index.core.prompts import PromptTemplate
-from llama_index.llms.openai import OpenAI
 from llama_index.core.llms import LLM
 from typing import Optional
-from dotenv import load_dotenv
-load_dotenv()
-
-EDITOR_LLM = OpenAI(model="o1-preview", temperature=0.7, max_completion_tokens=50000)
 
 CV_REVIEW_PROMPT_WITH_JD = """\You are a senior career advisor. You are given an original resume, (optionally) a job description and a critique on the strengths and weaknesses of the resume.
 Your task is to use the critique to improve the resume. The improved version should address the weak points of the resume and implement the recommendations as needed.
@@ -50,9 +45,9 @@ CV_REVIEW_PROMPT_TEMPLATE_NO_JD = PromptTemplate(CV_REVIEW_PROMPT_NO_JD)
 def edit_cv(
     resume: str,
     critique: str,
+    editor_llm: LLM,
     extra_instructions: str = "",
     job_description: Optional[str] = None,
-    editor_llm: LLM = EDITOR_LLM
 ) -> str:
     if job_description:
         query = CV_REVIEW_PROMPT_TEMPLATE_WITH_JD.format(

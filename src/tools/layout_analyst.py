@@ -1,4 +1,3 @@
-from llama_index.multi_modal_llms.openai import OpenAIMultiModal
 import io
 import base64
 from typing import Optional
@@ -6,8 +5,6 @@ from llama_index.core.schema import ImageDocument
 from llama_index.core.llms import LLM
 from llama_index.core.prompts import ChatMessage, MessageRole
 from llama_index.multi_modal_llms.openai.utils import generate_openai_multi_modal_chat_message
-
-LAYOUT_CRITIQUE_LLM = OpenAIMultiModal(model="gpt-4o", temperature=0.2, max_new_tokens=4096, image_detail="high")
 
 CV_LAYOUT_CRITIQUE_SYSTEM_PROMPT = """You are an honest and reliable HR specialist with expertise in building effective resumes.
 You are not afraid to constructively comment on the weak aspects of the resume. Be honest, do not make up information.
@@ -48,8 +45,8 @@ def convert_PIL_to_base64(image) -> str:
 
 def critique_cv_layout(
     resume,
+    llm: LLM,
     job_description: Optional[str] = None,
-    llm: LLM = LAYOUT_CRITIQUE_LLM,
 ):
     if not isinstance(resume, list):
         resume = [resume]
@@ -81,8 +78,8 @@ def critique_cv_layout(
 
 async def acritique_cv_layout(
     resume: str,
+    llm: LLM,
     job_description: Optional[str] = None,
-    llm: LLM = LAYOUT_CRITIQUE_LLM
 ):  
     if not isinstance(resume, list):
         resume = [resume]

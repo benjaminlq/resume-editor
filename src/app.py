@@ -44,11 +44,14 @@ with gr.Blocks(title="main") as demo:
 
     with gr.Column(visible=False) as main_block:
         
-        CHATBOT_LLM = OpenAI(model="gpt-4o", max_tokens=1024)
-        EXTRACTION_LLM = OpenAI(model="gpt-4o-mini", max_tokens=4096)
-        VISUAL_CRITIQUE_LLM = OpenAI(model="gpt-4o", max_tokens=4096)
-        CONTENT_CRITIQUE_LLM, EDITOR_LLM = _resolve_openai_model()
-        
+        try:
+            CHATBOT_LLM = OpenAI(model="gpt-4o", max_tokens=1024)
+            EXTRACTION_LLM = OpenAI(model="gpt-4o-mini", max_tokens=4096)
+            VISUAL_CRITIQUE_LLM = OpenAI(model="gpt-4o", max_tokens=4096)
+            CONTENT_CRITIQUE_LLM, EDITOR_LLM = _resolve_openai_model()
+        except:
+            pass    
+                
         gr.Markdown("""# Resume Critique Bot\n### Powered by OpenAI o1-preview model""")
         state = gr.State({
             "chat_messages": [

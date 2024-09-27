@@ -8,12 +8,7 @@ from llama_index.core.indices import SummaryIndex
 from llama_index.core.tools import FunctionTool
 from llama_index.agent.openai import OpenAIAgent
 
-from dotenv import load_dotenv
-load_dotenv()
-
 MAX_CHUNK_SIZE = 128000
-EXTRACTION_LLM = OpenAI(model="gpt-4o-mini", temperature=0.2, max_tokens=4096)
-LLM = OpenAI(model="gpt-4o", max_tokens=4096)
 
 JOB_EXTRACTION_QUERY = "Extract Job Information from the HTML text given under context. Return empty string if there is no job description found from the url"
 
@@ -40,7 +35,7 @@ def extract_job_description_from_url(
     Use this function to extract the job description from the url
     """
 
-    extraction_llm = EXTRACTION_LLM
+    extraction_llm = OpenAI(model="gpt-4o-mini", temperature=0.2, max_tokens=4096)
     sentence_splitter = SentenceSplitter(chunk_size = MAX_CHUNK_SIZE)
     
     try:
@@ -70,7 +65,7 @@ JD_EXTRACTION_TOOL = FunctionTool.from_defaults(
 def refine_job_description(
     job_description: str
 ):
-
+    LLM = OpenAI(model="gpt-4o", max_tokens=4096)
     jd_extraction_agent = OpenAIAgent.from_tools(
         [JD_EXTRACTION_TOOL],
         llm=LLM,
