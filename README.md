@@ -1,5 +1,8 @@
 # GPT-powered advisor for resume critiques
 
+## Demo
+https://huggingface.co/spaces/lequan2902/cv_critique
+
 ## Features
 - Critique resume content based on specific job description (using GPT-o1-preview)
 - Critique resume visual design (using GPT-4o Vision Language)

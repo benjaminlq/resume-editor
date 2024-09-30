@@ -24,9 +24,9 @@ def _resolve_openai_model():
     models = client.models.list()
     model_list = [model.id for model in models]
     if "o1-preview" not in model_list:
-        return OpenAI(model="gpt-4o-mini", max_tokens=4096), OpenAI(model="gpt-4o-mini", max_tokens=4096)
+        return OpenAI(model="gpt-4o", max_tokens=4096)
     else:
-        return OpenAI(model="o1-preview", max_completion_tokens=40000), OpenAI(model="o1-preview", max_completion_tokens=50000)
+        return OpenAI(model="o1-preview", max_completion_tokens=50000)
 
 CHATBOT_SYSTEM_PROMPT = (
     "This is a conversation between a human and an AI. "
@@ -41,16 +41,9 @@ with gr.Blocks(title="main") as demo:
         api_key_input = gr.Textbox(label="API Key", placeholder="Enter your API Key here")
         submit_button = gr.Button("Submit")
         error_message = gr.Textbox(visible=False)
+        llm_state = gr.State({})
 
-    with gr.Column(visible=False) as main_block:
-        
-        try:
-            CHATBOT_LLM = OpenAI(model="gpt-4o", max_tokens=1024)
-            EXTRACTION_LLM = OpenAI(model="gpt-4o-mini", max_tokens=4096)
-            VISUAL_CRITIQUE_LLM = OpenAI(model="gpt-4o", max_tokens=4096)
-            CONTENT_CRITIQUE_LLM, EDITOR_LLM = _resolve_openai_model()
-        except:
-            pass    
+    with gr.Column(visible=False) as main_block: 
                 
         gr.Markdown("""# Resume Critique Bot\n### Powered by OpenAI o1-preview model""")
         state = gr.State({
@@ -201,9 +194,9 @@ with gr.Blocks(title="main") as demo:
             
             return {chat_message: "", chatbot: gradio_messages}
 
-        def ai_respond(current_state, evt_data: gr.EventData):
+        def ai_respond(current_state, llm_state, evt_data: gr.EventData):
             messages = current_state["chat_messages"]
-            response = CHATBOT_LLM.chat(messages)
+            response = llm_state["chatbot"].chat(messages)
             response_str = response.message.content
             messages.append(ChatMessage(role=MessageRole.ASSISTANT, content=response_str))
             current_state["chat_messages"] = messages
@@ -218,7 +211,7 @@ with gr.Blocks(title="main") as demo:
             outputs = [chat_message, chatbot]
             ).then(
                 fn = ai_respond,
-                inputs = state,
+                inputs = [state, llm_state],
                 outputs = [chat_message, chatbot]
                 )
         
@@ -230,8 +223,8 @@ with gr.Blocks(title="main") as demo:
                 current_state["chat_messages"] = []
             return {chatbot: None}
 
-        @analysis_button.click(inputs=state, outputs=[content_analysis, layout_analysis, chatbot])
-        def analyze_resume(current_state):
+        @analysis_button.click(inputs=[state, llm_state], outputs=[content_analysis, layout_analysis, chatbot])
+        def analyze_resume(current_state, llm_state):
             cv_data = current_state.get("cv_data", "")
             cv_images = current_state.get("cv_images", [])
             jd = current_state.get("jd_data", "")
@@ -252,12 +245,12 @@ with gr.Blocks(title="main") as demo:
                         acritique_cv_content(
                             resume=cv_data,
                             job_description=jd,
-                            llm=VISUAL_CRITIQUE_LLM # CONTENT_CRITIQUE_LLM
+                            llm=llm_state["content_critique"]
                             ),
                         acritique_cv_layout(
                             resume = cv_images,
                             job_description = jd,
-                            llm=VISUAL_CRITIQUE_LLM
+                            llm=llm_state["visual_critique"]
                             )
                         ]
                     
@@ -265,11 +258,11 @@ with gr.Blocks(title="main") as demo:
                     tasks = [
                         acritique_cv_content(
                             resume=cv_data,
-                            llm=VISUAL_CRITIQUE_LLM #CONTENT_CRITIQUE_LLM
+                            llm=llm_state["content_critique"]
                             ),
                         acritique_cv_layout(
                             resume = cv_images,
-                            llm=VISUAL_CRITIQUE_LLM
+                            llm=llm_state["visual_critique"]
                             )
                         ]
                 
@@ -297,8 +290,8 @@ with gr.Blocks(title="main") as demo:
             editor_button = gr.Button("Revise")
             editted_resume = gr.Markdown(label="Your Editted CV")
             ## Events
-            @editor_button.click(inputs=[extra_inst, state], outputs=editted_resume)
-            def edit_resume(extra_instructions, current_state):
+            @editor_button.click(inputs=[extra_inst, state, llm_state], outputs=editted_resume)
+            def edit_resume(extra_instructions, current_state, llm_state):
                 cv_data = current_state.get("cv_data", "")
                 critique = current_state.get("overall_analysis", "")
                 job_description = current_state.get("jd_data", "")
@@ -312,17 +305,26 @@ with gr.Blocks(title="main") as demo:
                     critique=critique,
                     extra_instructions=extra_instructions,
                     job_description=job_description,
-                    editor_llm=EDITOR_LLM
+                    editor_llm=llm_state["editor"]
                     )
 
                 return editted_cv
 
-    @submit_button.click(inputs=api_key_input, outputs=[login_block, main_block, error_message])
-    def validate_api_key(api_key):
+    @submit_button.click(inputs=[api_key_input, llm_state], outputs=[login_block, main_block, error_message])
+    def validate_api_key(api_key, llm_state):
         try:
             client = openai.OpenAI(api_key = api_key)
             _ = client.models.list()
             os.environ["OPENAI_API_KEY"] = api_key
+            llm_state.update(
+                {
+                    "chatbot": OpenAI(model="gpt-4o", max_tokens=1024),
+                    "extraction": OpenAI(model="gpt-4o-mini", max_tokens=4096),
+                    "visual_critique": OpenAI(model="gpt-4o", max_tokens=4096),
+                    "content_critique": _resolve_openai_model(),
+                    "editor": _resolve_openai_model()
+                }
+            )
             return {login_block: gr.Column(visible=False), main_block: gr.Column(visible=True), error_message: gr.Textbox(visible=False)}
         except:
             return {login_block: gr.Column(visible=True), main_block: gr.Column(visible=False), error_message: gr.Textbox(visible=True, value="Invalid API Key. Please try again.")}
